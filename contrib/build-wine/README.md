@@ -20,8 +20,11 @@ Usage:
  -----------Install Wine 4.0-------- 
 
  Standard apt install with 3.0 and doesn't include mono or gecko. This install will ask to install mono and gecko automatically on first build.
+ 
  $ sudo dpkg --add-architecture i386
+
  $ wget -nc https://dl.winehq.org/wine-builds/winehq.key
+
  $ sudo apt-key add winehq.key
 
  (Choose one)
