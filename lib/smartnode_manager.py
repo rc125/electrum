@@ -223,13 +223,13 @@ class MasternodeManager(object):
             raise Exception('Collateral payment must have at least %d confirmations (current: %d)' % (MASTERNODE_MIN_CONFIRMATIONS, conf))
         # Ensure that the Smartnode's vin is valid.
         if mn.vin.get('value', 0) != SMARTNODE_COLLATERAL_VALUE:
-            raise Exception('Smartnode requires a collateral {} SMART output.'.format(SMARTNODE_COLLATERAL_VALUE))
+            raise Exception('Smartnode requires a collateral {} SMART output.'.format(format_satoshis_plain(SMARTNODE_COLLATERAL_VALUE)))
 
         # Ensure collateral was not moved or spent.
         uxto = '{}:{}'.format(mn.vin['prevout_hash'], mn.vin['prevout_n'])
         utxos = self.wallet.get_addr_utxo(mn.vin['address'])
         if uxto not in utxos:
-            raise Exception('Smartnode requires a {} SMART collateral. Check if funds have been moved or spent.'.format(SMARTNODE_COLLATERAL_VALUE))
+            raise Exception('Smartnode requires a {} SMART collateral. Check if funds have been moved or spent.'.format(format_satoshis_plain(SMARTNODE_COLLATERAL_VALUE)))
 
 
     def check_masternode_status(self, alias):
@@ -252,7 +252,7 @@ class MasternodeManager(object):
             raise Exception('Collateral payment must have at least %d confirmations (current: %d)' % (MASTERNODE_MIN_CONFIRMATIONS, conf))
         # Ensure that the Smartnode's vin is valid.
         if mn.vin.get('value', 0) != SMARTNODE_COLLATERAL_VALUE:
-            raise Exception('Smartnode requires a collateral {} SMART output.'.format(SMARTNODE_COLLATERAL_VALUE))
+            raise Exception('Smartnode requires a collateral {} SMART output.'.format(format_satoshis_plain(SMARTNODE_COLLATERAL_VALUE)))
 
         collat = mn.get_collateral_str()
         status = self.masternode_statuses.get(collat)
