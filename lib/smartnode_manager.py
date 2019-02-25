@@ -229,7 +229,7 @@ class MasternodeManager(object):
         uxto = '{}:{}'.format(mn.vin['prevout_hash'], mn.vin['prevout_n'])
         utxos = self.wallet.get_addr_utxo(mn.vin['address'])
         if uxto not in utxos:
-            raise Exception('Smartnode requires a 10 000 SMART collateral. Check if funds have been moved or spent.')
+            raise Exception('Smartnode requires a {} SMART collateral. Check if funds have been moved or spent.'.format(SMARTNODE_COLLATERAL_VALUE))
 
 
     def check_masternode_status(self, alias):
@@ -277,7 +277,7 @@ class MasternodeManager(object):
         if mn.vin.get('sequence') is None:
             mn.vin['sequence'] = 0xffffffff
         # Ensure that the smartnode's last_ping is current.
-        height = self.wallet.get_local_height() - 67
+        height = self.wallet.get_local_height() - 33
         blockchain = self.wallet.network.blockchain()
         header = blockchain.read_header(height)
         mn.last_ping.block_hash = hash_header(header)
