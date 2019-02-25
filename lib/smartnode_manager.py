@@ -313,6 +313,16 @@ class MasternodeManager(object):
             errmsg = errmsg[0]
         return (errmsg, mn.announced)
 
+    def get_broadcast_message(self, alias, password):
+
+        if not self.wallet.network.is_connected():
+            raise Exception('Not connected')
+
+        self.sign_announce(alias, password)
+        mn = self.get_masternode(alias)
+        serialized = '01' + mn.serialize()
+        return serialized
+
     def broadcast_announce_callback(self, alias, errmsg, r):
         """Callback for when a Smartnode Announce message is broadcasted."""
         try:

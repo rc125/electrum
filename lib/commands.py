@@ -642,6 +642,10 @@ class Commands:
         for k in list(self.wallet.receive_requests.keys()):
             self.wallet.remove_payment_request(k, self.config)
 
+    @command('w')
+    def export_checkpoints(self, path):
+        self.network.export_checkpoints(path)
+
     # Smartnode commands.
     @command('wnp')
     def smartnode_importconf(self, conf_file):
@@ -669,11 +673,6 @@ class Commands:
             return 'Added new smartnode "%s".' % alias
         except Exception as e:
             return 'Error: %s' % str(e)
-
-    @command('w')
-    def export_checkpoints(self, path):
-        self.network.export_checkpoints(path)
-
 
     @command('w')
     def smartnode_status(self, alias):
@@ -727,6 +726,11 @@ class Commands:
             return 'Error sending: ' + str(e)
 
         return 'Smartnode "%s" activated successfully.' % alias
+
+    @command('w')
+    def smartnode_get_broadcastmessage(self, alias, password):
+        """List unused smartnode-compatible payments."""
+        return self.masternode_manager.get_broadcast_message(alias, password)
 
     @command('w')
     def smartrewards_current(self):
