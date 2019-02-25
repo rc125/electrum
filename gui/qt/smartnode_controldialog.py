@@ -542,7 +542,7 @@ class SmartnodeControlDialog(QDialog, PrintError):
         return True
 
     def scan_for_outputs(self, include_frozen):
-        """Scan for 10000 SMART outputs.
+        """Scan for 100.000 SMART outputs.
 
         If one or more is found, populate the list and enable the sign button.
         """
