@@ -320,6 +320,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         elif event == 'verified':
             self.history_list.update_item(*args)
             self.smartrewards_tab.reload()
+            self.load_smartvote_info()
         elif event == 'fee':
             if self.config.is_dynfee():
                 #self.fee_slider.update()
@@ -360,8 +361,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.smartnode_tab.update_nodelist(self.wallet, self.config, self.smartnode_manager)
 
         #Load SmartVote
-        self.smartvote_manager = SmartvoteManager(self.wallet)
-        self.smartvote_tab.load_smartvote(self.smartvote_manager)
+        self.load_smartvote_info()
 
         # Load SmartRewards
         self.smartrewards_manager = SmartrewardsManager(self.wallet, self.network)
@@ -3297,3 +3297,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
     def update_smartvote_tab(self):
         self.smartvote_tab.update_all_proposals()
 
+    def load_smartvote_info(self):
+        self.smartvote_manager = SmartvoteManager(self.wallet)
+        self.smartvote_tab.load_smartvote(self.smartvote_manager)
