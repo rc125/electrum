@@ -276,8 +276,8 @@ class MasternodeManager(object):
             mn.vin['scriptSig'] = ''
         if mn.vin.get('sequence') is None:
             mn.vin['sequence'] = 0xffffffff
-        # Ensure that the smartnode's last_ping is current.
-        height = self.wallet.get_local_height() - 33
+        # Ensure that the smartnode's last_ping is current
+        height = self.wallet.get_local_height() - 33  # 33 * 55s => 30min
         blockchain = self.wallet.network.blockchain()
         header = blockchain.read_header(height)
         mn.last_ping.block_hash = hash_header(header)
