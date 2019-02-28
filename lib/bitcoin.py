@@ -623,7 +623,7 @@ def msg_magic(message):
 def verify_message(address, sig, message):
     assert_bytes(sig, message)
     try:
-        h = Hash(msg_magic(message))
+        h = Hash_Sha256(msg_magic(message))
         public_key, compressed = pubkey_from_signature(sig, h)
         # check public key using the address
         pubkey = point_to_ser(public_key.pubkey.point, compressed)
