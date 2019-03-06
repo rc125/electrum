@@ -1496,7 +1496,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         else:
             errors = self.payto_e.get_errors()
             if errors:
-                self.show_warning(_("Invalid Lines found:") + "\n\n" + '\n'.join([ _("Line #") + str(x[0]+1) + ": " + x[1] for x in errors]))
+                self.show_warning(_("Invalid Lines found:") + "\n\n" + '\n'.join([_("Line #") + str(x[0]+1) + ": " + x[1] for x in errors]))
                 return
             outputs = self.payto_e.get_outputs(self.is_max)
 

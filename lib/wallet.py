@@ -76,7 +76,7 @@ TX_STATUS = [
 TX_HEIGHT_LOCAL = -2
 TX_HEIGHT_UNCONF_PARENT = -1
 TX_HEIGHT_UNCONFIRMED = 0
-
+MAX_INPUTS = 500
 
 
 #def relayfee(network):
@@ -1259,6 +1259,7 @@ class Abstract_Wallet(PrintError):
             coin_chooser = coinchooser.get_coin_chooser(config)
             tx = coin_chooser.make_tx(inputs, outputs, change_addrs[:max_change],
                                       fee_estimator, self.dust_threshold())
+
             # SmartCash Fee
             if(tx.estimated_size() < 1000):
                 fixed_fee = 100000
@@ -1269,6 +1270,11 @@ class Abstract_Wallet(PrintError):
                                           fee_estimator, self.dust_threshold())
         else:
             # FIXME?? this might spend inputs with negative effective value...
+
+            # SmartCash max inputs: When clicking the MAX button only use the max inputs allowed
+            if len(inputs) > MAX_INPUTS:
+                inputs = inputs[:MAX_INPUTS]
+
             sendable = sum(map(lambda x:x['value'], inputs))
             _type, data, value = outputs[i_max]
             outputs[i_max] = (_type, data, 0)
@@ -1280,6 +1286,13 @@ class Abstract_Wallet(PrintError):
             amount = max(0, sendable - tx.output_value() - fee)
             outputs[i_max] = (_type, data, amount)
             tx = Transaction.from_io(inputs, outputs[:])
+
+        # SmartCash max inputs
+        inputs_used = len(tx._inputs)
+        if inputs_used > MAX_INPUTS:
+            raise Exception(
+                'This transaction exceeds the maximum number of inputs. Try to send a smaller amount (max {} inputs, this transaction is using {} inputs)'.format(
+                    MAX_INPUTS, inputs_used))
 
         # Sort the inputs and outputs deterministically
         tx.BIP_LI01_sort()
