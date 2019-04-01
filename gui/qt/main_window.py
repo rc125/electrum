@@ -1210,7 +1210,8 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         # SmartCash Fee
         #hbox.addWidget(self.feerate_e)
         #hbox.addWidget(self.size_e)
-        self.fee_e.setFrozen(True)
+        self.fee_e.setFrozen(False)
+        self.fee_e.setDisabled(True)
 
         hbox.addWidget(self.fee_e)
         hbox.addWidget(self.feerounding_icon, Qt.AlignLeft)
