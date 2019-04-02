@@ -16,20 +16,20 @@ class SmartnewsTab(QWidget):
 
     def create_layout(self):
         self.setObjectName("Form")
-        self.resize(794, 441)
+        self.resize(1167, 560)
+        self.gridLayoutWidget = QWidget(self)
+        self.gridLayoutWidget.setGeometry(QRect(10, 10, 1141, 541))
+        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
+        self.gridLayout = QGridLayout(self.gridLayoutWidget)
+        self.gridLayout.setSizeConstraint(QLayout.SetMaximumSize)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
         self.webView = QWebEngineView(self)
-        self.webView.setGeometry(QRect(0, 0, 791, 421))
-        sizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.webView.sizePolicy().hasHeightForWidth())
-        self.webView.setSizePolicy(sizePolicy)
-        self.webView.setUrl(QUrl("file:///home/renatocruz/Desktop/smartnews.html"))
+        self.webView.setUrl(QUrl("https://electrum-news.rc125.cc/"))
         self.webView.setObjectName("webView")
+        self.gridLayout.addWidget(self.webView, 0, 0, 1, 1)
 
-        self.retranslateUi(self)
-        QMetaObject.connectSlotsByName(self)
-
-    def retranslateUi(self, SmartVotingPage):
-        _translate = QCoreApplication.translate
-        self.setWindowTitle(_translate("Form", "Form"))
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    sys.exit(app.exec_())
