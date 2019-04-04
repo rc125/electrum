@@ -147,7 +147,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         tabs.addTab(self.smartnode_tab, QIcon(":icons/tab_smartnodes.png"), _('SmartNodes'))
         tabs.addTab(self.smartvote_tab, QIcon(":icons/tab_smarthive.png"), _('SmartVote'))
         tabs.addTab(self.smartrewards_tab, QIcon(":icons/tab_smartrewards.png"), _('SmartRewards'))
-        tabs.addTab(self.smartnews_tab, QIcon(":icons/tab_smarthive.png"), _('News'))
+        tabs.addTab(self.smartnews_tab, QIcon(":icons/tab_smartnews.png"), _('News'))
 
         def add_optional_tab(tabs, tab, icon, description, name):
             tab.tab_icon = icon
