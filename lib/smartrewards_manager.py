@@ -130,5 +130,6 @@ class SmartrewardsManager(object):
         print_msg('Rewards for [{}] is [{}]'.format(addr, eligible_balance))
 
     def add_thousands_spaces(self, a):
-        a = float(a)
+        s = a.replace(',', '.')
+        a = float(s)
         return format(a, ',').replace(',', ' ')
