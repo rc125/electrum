@@ -22,7 +22,7 @@ class SmartnodeControlDialog(QDialog, PrintError):
     EDIT = 1
     VIEW = 2
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(SmartnodeControlDialog, self).__init__(parent)
         self.gui = parent
         self.setWindowTitle(_('Smartnode Manager'))
@@ -464,8 +464,11 @@ class SmartnodeControlDialog(QDialog, PrintError):
                 QMessageBox.warning(self, _('Warning'), _('Ignoring invalid smartnode private key.'))
             smartnode_pubkey = ''
 
+        # Freeze output
+        freeze_coin = '{}:{}'.format(tx_hash, tx_prevout_n)
+        self.manager.wallet.set_frozen_coin_state([freeze_coin], True)
+
         # Save Smartnode
-        self.manager.wallet.set_frozen_state([tx_addr], True)
         self.mapper.submit()
         self.manager.save()
         self.accept()
