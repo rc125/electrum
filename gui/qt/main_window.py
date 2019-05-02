@@ -166,7 +166,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setCentralWidget(tabs)
 
-        tabs.currentChanged.connect(self.load_vote_proposals)
+        tabs.currentChanged.connect(self.load_data_by_tab_index)
 
         if self.config.get("is_maximized"):
             self.showMaximized()
@@ -213,10 +213,10 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.connect_slots(gui_object.timer)
         self.fetch_alias()
 
-    def load_vote_proposals(self, index):
-        if(index == 4):
+    def load_data_by_tab_index(self, index):
+        if(index == 5):
             self.update_smartvote_tab()
-        elif (index == 5):
+        elif (index == 6):
             self.smartrewards_tab.subscribe_to_smartrewards()
             self.need_update.set()
 
