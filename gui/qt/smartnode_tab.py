@@ -260,7 +260,7 @@ class SmartnodeTab(QWidget, PrintError):
         self.tableWidgetMySmartnodes.setColumnHidden(9, True)
         self.tableWidgetMySmartnodes.setColumnHidden(10, True)
 
-        self.smartnode_editor = editor = SmartnodeControlDialog()
+        self.smartnode_editor = editor = SmartnodeControlDialog(self.gui)
         self.mapper = mapper = QDataWidgetMapper()
         mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
         mapper.setModel(model)
@@ -403,6 +403,8 @@ class SmartnodeTab(QWidget, PrintError):
             self.remove_empty_smartnode()
         elif (action == self.CREATE or self.EDIT) and d.result() == QDialog.Accepted:
             self.update_smartnodes_status(False)
+            # need to update utxo_list
+            self.gui.need_update.set()
 
     def add_empty_smartnode(self):
         empty_smartnode = MasternodeAnnounce(alias='', addr=NetworkAddress())
@@ -435,6 +437,9 @@ class SmartnodeTab(QWidget, PrintError):
 
     def remove_smartnode(self, alias, save=True):
         self.model.remove_smartnode(alias, save=save)
+
+        # need to update utxo_list
+        self.gui.need_update.set()
 
     def smartnode_for_row(self, row):
         idx = self.proxy_model.mapToSource(self.proxy_model.index(row, 0))
