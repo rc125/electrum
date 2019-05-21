@@ -1,14 +1,13 @@
 #!/bin/bash
 
 NAME_ROOT=electrum-smart
-PYTHON_VERSION=3.5.4
 
 # These settings probably don't need any change
 export WINEPREFIX=/opt/wine64
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONHASHSEED=22
 
-PYHOME=c:/python$PYTHON_VERSION
+PYHOME=c:/python3
 PYTHON="wine $PYHOME/python.exe -OO -B"
 
 
@@ -19,41 +18,31 @@ set -e
 mkdir -p tmp
 cd tmp
 
-for repo in electrum-smart electrum-smart-locale electrum-smart-icons; do
-    if [ -d $repo ]; then
-	cd $repo
-	git pull
-	git checkout master
-	cd ..
-    else
-	URL=https://github.com/smartcash/$repo.git
-	git clone -b master $URL $repo
-    fi
-done
+pushd $WINEPREFIX/drive_c/electrum-smart
 
-pushd electrum-smart-locale
+# Load electrum-smart-locale for this release
+git submodule init
+git submodule update
+
+VERSION=`git describe --tags --dirty --always`
+echo "Last commit: $VERSION"
+
+pushd ./contrib/deterministic-build/electrum-smart-locale
+if ! which msgfmt > /dev/null 2>&1; then
+    echo "Please install gettext"
+    exit 1
+fi
 for i in ./locale/*; do
-    dir=$i/LC_MESSAGES
+    dir=$WINEPREFIX/drive_c/electrum-smart/electrum-smart/$i/LC_MESSAGES
     mkdir -p $dir
-    msgfmt --output-file=$dir/electrum.mo $i/electrum.po || true
+    msgfmt --output-file=$dir/electrum-smart.mo $i/electrum-smart.po || true
 done
 popd
 
-pushd electrum-smart
-if [ ! -z "$1" ]; then
-    git checkout $1
-fi
-
-VERSION=`git describe --tags`
-echo "Last commit: $VERSION"
 find -exec touch -d '2000-11-11T11:11:11+00:00' {} +
 popd
 
-rm -rf $WINEPREFIX/drive_c/electrum-smart
-cp -r electrum-smart $WINEPREFIX/drive_c/electrum-smart
-cp electrum-smart/LICENCE .
-cp -r electrum-smart-locale/locale $WINEPREFIX/drive_c/electrum-smart/lib/
-cp electrum-smart-icons/icons_rc.py $WINEPREFIX/drive_c/electrum-smart/gui/qt/
+cp $WINEPREFIX/drive_c/electrum-smart/LICENCE .
 
 # Install frozen dependencies
 $PYTHON -m pip install -r ../../deterministic-build/requirements.txt
@@ -61,7 +50,7 @@ $PYTHON -m pip install -r ../../deterministic-build/requirements.txt
 $PYTHON -m pip install -r ../../deterministic-build/requirements-hw.txt
 
 pushd $WINEPREFIX/drive_c/electrum-smart
-$PYTHON setup.py install
+$PYTHON -m pip install .
 popd
 
 cd ..
@@ -69,7 +58,7 @@ cd ..
 rm -rf dist/
 
 # build standalone and portable versions
-wine "C:/python$PYTHON_VERSION/scripts/pyinstaller.exe" --noconfirm --ascii --name $NAME_ROOT-$VERSION -w deterministic.spec
+wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
 
 # set timestamps in dist, in order to make the installer reproducible
 pushd dist
@@ -77,12 +66,12 @@ find -exec touch -d '2000-11-11T11:11:11+00:00' {} +
 popd
 
 # build NSIS installer
-# $VERSION could be passed to the electrum.nsi script, but this would require some rewriting in the script iself.
-wine "$WINEPREFIX/drive_c/Program Files (x86)/NSIS/makensis.exe" /DPRODUCT_VERSION=$VERSION electrum.nsi
+# $VERSION could be passed to the electrum-smart.nsi script, but this would require some rewriting in the script itself.
+wine "$WINEPREFIX/drive_c/Program Files (x86)/NSIS/makensis.exe" /DPRODUCT_VERSION=$VERSION electrum-smart.nsi
 
 cd dist
 mv electrum-smart-setup.exe $NAME_ROOT-$VERSION-setup.exe
 cd ..
 
 echo "Done."
-md5sum dist/electrum*exe
+sha256sum dist/electrum-smart*exe
