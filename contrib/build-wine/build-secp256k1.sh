@@ -26,7 +26,7 @@ if [ ! -d secp256k1 ]; then
     cd secp256k1;
 else
     cd secp256k1
-    git pull
+    #git pull
 fi
 
 LIBSECP_VERSION="b408c6a8b287003d1ade5709e6f7bc3c7f1d5be7"
