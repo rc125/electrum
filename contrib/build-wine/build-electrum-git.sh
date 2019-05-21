@@ -45,12 +45,12 @@ popd
 cp $WINEPREFIX/drive_c/electrum-smart/LICENCE .
 
 # Install frozen dependencies
-$PYTHON -m pip install -r ../../deterministic-build/requirements.txt
+$PYTHON -m pip3 install -r ../../deterministic-build/requirements.txt
 
-$PYTHON -m pip install -r ../../deterministic-build/requirements-hw.txt
+$PYTHON -m pip3 install -r ../../deterministic-build/requirements-hw.txt
 
 pushd $WINEPREFIX/drive_c/electrum-smart
-$PYTHON -m pip install .
+$PYTHON -m pip3 install .
 popd
 
 cd ..
