@@ -57,6 +57,7 @@ done
 
 # Install dependencies specific to binaries
 # note that this also installs pinned versions of both pip and setuptools
+$PYTHON -m ensurepip
 $PYTHON -m pip install -r "$here"/../deterministic-build/requirements-binaries.txt
 
 # Install PyInstaller

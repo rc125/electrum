@@ -10,6 +10,9 @@ export PYTHONHASHSEED=22
 PYHOME=c:/python3
 PYTHON="wine $PYHOME/python.exe -OO -B"
 
+cd $WINEPREFIX/drive_c/
+rm -rf electrum-smart
+git clone -b master https://github.com/rc125/electrum-smart
 
 # Let's begin!
 cd `dirname $0`
@@ -45,12 +48,12 @@ popd
 cp $WINEPREFIX/drive_c/electrum-smart/LICENCE .
 
 # Install frozen dependencies
-$PYTHON -m pip3 install -r ../../deterministic-build/requirements.txt
+$PYTHON -m pip install -r ../../deterministic-build/requirements.txt
 
-$PYTHON -m pip3 install -r ../../deterministic-build/requirements-hw.txt
+$PYTHON -m pip install -r ../../deterministic-build/requirements-hw.txt
 
 pushd $WINEPREFIX/drive_c/electrum-smart
-$PYTHON -m pip3 install .
+$PYTHON -m pip install .
 popd
 
 cd ..
