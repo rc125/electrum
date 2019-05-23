@@ -27,7 +27,6 @@ import signal
 import sys
 import traceback
 
-
 try:
     import PyQt5
 except Exception:
@@ -36,7 +35,7 @@ except Exception:
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+import PyQt5.QtWebEngineWidgets
 import PyQt5.QtCore as QtCore
 
 from electrum_smart.i18n import _, set_language

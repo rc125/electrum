@@ -10,10 +10,6 @@ export PYTHONHASHSEED=22
 PYHOME=c:/python3
 PYTHON="wine $PYHOME/python.exe -OO -B"
 
-cd $WINEPREFIX/drive_c/
-rm -rf electrum-smart
-git clone -b master https://github.com/rc125/electrum-smart
-
 # Let's begin!
 cd `dirname $0`
 set -e
@@ -21,31 +17,41 @@ set -e
 mkdir -p tmp
 cd tmp
 
-pushd $WINEPREFIX/drive_c/electrum-smart
+for repo in electrum-smart electrum-smart-locale electrum-smart-icons; do
+    if [ -d $repo ]; then
+	cd $repo
+	git pull
+	git checkout master
+	cd ..
+    else
+	URL=https://github.com/rc125/$repo.git
+	git clone -b master $URL $repo
+    fi
+done
 
-# Load electrum-smart-locale for this release
-git submodule init
-git submodule update
-
-VERSION=`git describe --tags --dirty --always`
-echo "Last commit: $VERSION"
-
-pushd ./contrib/deterministic-build/electrum-smart-locale
-if ! which msgfmt > /dev/null 2>&1; then
-    echo "Please install gettext"
-    exit 1
-fi
+pushd electrum-smart-locale
 for i in ./locale/*; do
-    dir=$WINEPREFIX/drive_c/electrum-smart/electrum-smart/$i/LC_MESSAGES
+    dir=$i/LC_MESSAGES
     mkdir -p $dir
-    msgfmt --output-file=$dir/electrum-smart.mo $i/electrum-smart.po || true
+    msgfmt --output-file=$dir/electrum.mo $i/electrum.po || true
 done
 popd
 
+pushd electrum-smart
+if [ ! -z "$1" ]; then
+    git checkout $1
+fi
+
+VERSION=`git describe --tags`
+echo "Last commit: $VERSION"
 find -exec touch -d '2000-11-11T11:11:11+00:00' {} +
 popd
 
-cp $WINEPREFIX/drive_c/electrum-smart/LICENCE .
+rm -rf $WINEPREFIX/drive_c/electrum-smart
+cp -r electrum-smart $WINEPREFIX/drive_c/electrum-smart
+cp electrum-smart/LICENCE .
+cp -r electrum-smart-locale/locale $WINEPREFIX/drive_c/electrum-smart/lib/
+cp electrum-smart-icons/icons_rc.py $WINEPREFIX/drive_c/electrum-smart/gui/qt/
 
 # Install frozen dependencies
 $PYTHON -m pip install -r ../../deterministic-build/requirements.txt
@@ -53,7 +59,7 @@ $PYTHON -m pip install -r ../../deterministic-build/requirements.txt
 $PYTHON -m pip install -r ../../deterministic-build/requirements-hw.txt
 
 pushd $WINEPREFIX/drive_c/electrum-smart
-$PYTHON -m pip install .
+$PYTHON setup.py install
 popd
 
 cd ..

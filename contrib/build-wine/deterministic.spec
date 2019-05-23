@@ -10,17 +10,23 @@ for i, x in enumerate(sys.argv):
 else:
     raise Exception('no name')
 
-PYTHON_VERSION = '3.5.4'
-PYHOME = 'c:/python' + PYTHON_VERSION
+PYHOME = 'c:/python3'
 
 home = 'C:\\electrum-smart\\'
 
 # see https://github.com/pyinstaller/pyinstaller/issues/2005
 hiddenimports = []
 hiddenimports += collect_submodules('trezorlib')
+hiddenimports += collect_submodules('safetlib')
 hiddenimports += collect_submodules('btchip')
 hiddenimports += collect_submodules('keepkeylib')
 hiddenimports += collect_submodules('websocket')
+hiddenimports += collect_submodules('ckcc')
+hiddenimports += ['PyQt5.QtPrintSupport']  # needed by Revealer
+
+# safetlib imports PyQt5.Qt.  We use a local updated copy of pinmatrix.py until they
+# release a new version that includes https://github.com/archos-safe-t/python-safet/commit/b1eab3dba4c04fdfc1fcf17b66662c28c5f2380e
+hiddenimports.remove('safetlib.qt.pinmatrix')
 
 # Add libusb binary
 binaries = [(PYHOME+"/libusb-1.0.dll", ".")]
@@ -28,20 +34,20 @@ binaries = [(PYHOME+"/libusb-1.0.dll", ".")]
 # Workaround for "Retro Look":
 binaries += [b for b in collect_dynamic_libs('PyQt5') if 'qwindowsvista' in b[0]]
 
+binaries += [('C:/tmp/libsecp256k1.dll', '.')]
+
 datas = [
-    (home+'lib/currencies.json', 'electrum_smart'),
-    (home+'lib/servers.json', 'electrum_smart'),
-    (home+'lib/checkpoints.json', 'electrum_smart'),
-    (home+'lib/servers_testnet.json', 'electrum_smart'),
-    (home+'lib/checkpoints_testnet.json', 'electrum_smart'),
+    (home+'lib/*.json', 'electrum_smart'),
     (home+'lib/wordlist/english.txt', 'electrum_smart/wordlist'),
     (home+'lib/locale', 'electrum_smart/locale'),
     (home+'plugins', 'electrum_smart_plugins'),
     ('C:\\Program Files (x86)\\ZBar\\bin\\', '.')
 ]
 datas += collect_data_files('trezorlib')
+datas += collect_data_files('safetlib')
 datas += collect_data_files('btchip')
 datas += collect_data_files('keepkeylib')
+datas += collect_data_files('ckcc')
 
 # We don't put these files in to actually include them in the script but to make the Analysis method scan them for imports
 a = Analysis([home+'electrum-smart',
