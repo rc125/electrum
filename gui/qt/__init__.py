@@ -35,8 +35,14 @@ except Exception:
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import PyQt5.QtWebEngineWidgets
 import PyQt5.QtCore as QtCore
+
+try:
+    from PyQt5.QtWebEngineWidgets import *
+except Exception:
+    sys.exit("Error: Could not import PyQt5.QtWebEngineWidgets, PyQt version: {}".format(PYQT_VERSION_STR))
+
+
 
 from electrum_smart.i18n import _, set_language
 from electrum_smart.plugins import run_hook
