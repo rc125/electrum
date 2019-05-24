@@ -3,6 +3,7 @@ import base64
 import threading
 import json
 from decimal import Decimal
+from locale import localeconv
 
 from . import bitcoin
 from .blockchain import hash_header
@@ -130,5 +131,8 @@ class SmartrewardsManager(object):
         print_msg('Rewards for [{}] is [{}]'.format(addr, eligible_balance))
 
     def add_thousands_spaces(self, a):
-        a = float(a)
-        return format(a, ',').replace(',', ' ')
+        dp = localeconv()['decimal_point']
+        if dp == ',':
+            a = a.replace(',', '.')
+        out = float(a)
+        return format(out, ',').replace(',', ' ')
