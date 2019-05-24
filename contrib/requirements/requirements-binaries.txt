@@ -1,2 +1,3 @@
-PyQt5==5.10.1
-pycryptodomex
+PyQt5==5.12.2
+PyQtWebEngine==5.12.1
+pycryptodomex==3.7.3
