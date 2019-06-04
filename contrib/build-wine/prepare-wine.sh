@@ -13,7 +13,7 @@ LIBUSB_FILENAME=libusb-1.0.22.7z
 LIBUSB_URL=https://prdownloads.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.22/$LIBUSB_FILENAME?download
 LIBUSB_SHA256=671f1a420757b4480e7fadc8313d6fb3cbb75ca00934c417c1efa6e77fb8779b
 
-PYTHON_VERSION=3.6.8
+PYTHON_VERSION=3.5.4
 
 ## These settings probably don't need change
 export WINEPREFIX=/opt/wine64
@@ -31,7 +31,7 @@ set -e
 . $here/../build_tools_util.sh
 
 wine 'wineboot'
-
+winetricks 'vcrun2017'
 
 cd /tmp/electrum-smart-build
 
@@ -58,6 +58,7 @@ done
 # Install dependencies specific to binaries
 # note that this also installs pinned versions of both pip and setuptools
 $PYTHON -m ensurepip
+$PYTHON -m pip install --upgrade setuptools
 $PYTHON -m pip install -r "$here"/../deterministic-build/requirements-binaries.txt
 
 # Install PyInstaller

@@ -1,3 +1,2 @@
 PyQt5==5.12.2
 PyQtWebEngine==5.12.1
-pycryptodomex==3.7.3
