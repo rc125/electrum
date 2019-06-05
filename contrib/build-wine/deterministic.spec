@@ -26,7 +26,7 @@ hiddenimports += ['PyQt5.QtPrintSupport']  # needed by Revealer
 
 # safetlib imports PyQt5.Qt.  We use a local updated copy of pinmatrix.py until they
 # release a new version that includes https://github.com/archos-safe-t/python-safet/commit/b1eab3dba4c04fdfc1fcf17b66662c28c5f2380e
-hiddenimports.remove('safetlib.qt.pinmatrix')
+#hiddenimports.remove('safetlib.qt.pinmatrix')
 
 # Add libusb binary
 binaries = [(PYHOME+"/libusb-1.0.dll", ".")]
