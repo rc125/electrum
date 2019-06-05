@@ -6,6 +6,4 @@ protobuf==3.5.2.post1
 dnspython==1.15.0
 jsonrpclib-pelix==0.3.1
 PySocks==1.6.8
-qdarkstyle==2.7
-typing==3.6.6
 pycryptodomex==3.6.1

@@ -1,2 +1,2 @@
-PyQt5==5.12.2
-PyQtWebEngine==5.12.1
+PyQt5==5.10.1
+websocket-client==0.47.0

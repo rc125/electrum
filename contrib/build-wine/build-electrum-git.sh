@@ -38,9 +38,10 @@ done
 popd
 
 pushd electrum-smart
-#if [ ! -z "$1" ]; then
-#    git checkout $1
-#fi
+if [ ! -z "$1" ]; then
+    #git checkout $1
+    git checkout master
+fi
 
 VERSION=`git describe --tags`
 echo "Last commit: $VERSION"
