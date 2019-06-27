@@ -1,9 +1,12 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import datetime
 
 class Ui_SmartNewsWidget(object):
-    def setupUi(self, SmartProposalWidget):
+    def setupUi(self, SmartProposalWidget, news):
+
+        self.news = news
+
         SmartProposalWidget.setObjectName("SmartProposalWidget")
         SmartProposalWidget.resize(865, 232)
         SmartProposalWidget.setStyleSheet('#SmartProposalWidget{\n'
@@ -73,3 +76,28 @@ class Ui_SmartNewsWidget(object):
         self.label.setText(_translate("SmartProposalWidget", "A cryptocurrency themed Augmented Reality game called Crypto Hunters has been released for beta and SmartCash is on the list of currencies involved with the project! Created by SWYFT with the intent of helping to..."))
         self.viewProposalButton.setText(_translate("SmartProposalWidget", "Read more"))
 
+    def update_proposal_details(self):
+
+        news = self.news
+
+        # Format date
+        d = news.get('date')
+        if ":" == d[-3:-2]:
+            d = d[:-3] + d[-2:]
+        datetime_object = datetime.datetime.strptime(d, "%Y-%m-%dT%H:%M:%S%z")
+
+        title = news.get('title')
+        description = news.get('description')
+        date = datetime_object.strftime("%b %d %Y %H:%M UTC")
+        source = "{} - From {}".format(date, news.get('site'))
+        url = news.get('link')
+
+        self.titleLabel.setText(title)
+        self.groupBox_2.setTitle(source)
+        self.label.setText(description)
+
+        self.viewProposalButton.clicked.connect(lambda: self.open_in_browser(url))
+
+    def open_in_browser(self, url):
+        import webbrowser
+        webbrowser.open(url)

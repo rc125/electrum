@@ -3,6 +3,8 @@ import traceback
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .smartnews_list import Ui_SmartNewsWidget
+import requests
+from electrum_smart.util import print_msg
 
 
 class SmartnewsTab(QtWidgets.QWidget):
@@ -61,9 +63,9 @@ class SmartnewsTab(QtWidgets.QWidget):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
-        self.refreshButton = QtWidgets.QPushButton(self.newsPage)
-        self.refreshButton.setObjectName("refreshButton")
-        self.horizontalLayout_2.addWidget(self.refreshButton)
+        #self.refreshButton = QtWidgets.QPushButton(self.newsPage)
+        #self.refreshButton.setObjectName("refreshButton")
+        #self.horizontalLayout_2.addWidget(self.refreshButton)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
@@ -77,21 +79,32 @@ class SmartnewsTab(QtWidgets.QWidget):
     def retranslateUi(self, SmartNewsPage):
         _translate = QtCore.QCoreApplication.translate
         SmartNewsPage.setWindowTitle(_translate("SmartNewsPage", "Form"))
-        self.refreshButton.setText(_translate("SmartNewsPage", "Refresh List"))
+        #self.refreshButton.setText(_translate("SmartNewsPage", "Refresh List"))
 
     def on_load_news_successful(self):
-        SmartnewsListWidget = QtWidgets.QWidget()
-        ui = Ui_SmartNewsWidget()
-        ui.setupUi(SmartnewsListWidget)
-        self.verticalLayout_6.addWidget(SmartnewsListWidget)
 
-        SmartnewsListWidget = QtWidgets.QWidget()
-        ui = Ui_SmartNewsWidget()
-        ui.setupUi(SmartnewsListWidget)
-        self.verticalLayout_6.addWidget(SmartnewsListWidget)
+        print_msg('Loading news')
+        json = self.get_json('smartnews.claus235.dev', '/smartnews.json')
 
-        SmartnewsListWidget = QtWidgets.QWidget()
-        ui = Ui_SmartNewsWidget()
-        ui.setupUi(SmartnewsListWidget)
-        self.verticalLayout_6.addWidget(SmartnewsListWidget)
+        if json:
+            news_qtd = 0
+            for item in json['itens']:
+                try:
+                    SmartnewsListWidget = QtWidgets.QWidget()
+                    ui = Ui_SmartNewsWidget()
+                    ui.setupUi(SmartnewsListWidget, item)
+                    self.verticalLayout_6.addWidget(SmartnewsListWidget)
+                    news_qtd += 1
+                    if news_qtd == 5:
+                        break
+                except Exception as e:
+                    print_msg("could not load news: {}".format(str(e)))
+                    return
+        else:
+            print_msg('Could not load news api')
 
+    def get_json(self, site, get_string):
+        # APIs must have https
+        url = ''.join(['https://', site, get_string])
+        response = requests.request('GET', url, headers={'User-Agent' : 'Electrum'}, timeout=10)
+        return response.json()
