@@ -83,16 +83,17 @@ class SmartnewsTab(QtWidgets.QWidget):
 
     def on_load_news_successful(self):
 
-        print_msg('Loading news')
         json = self.get_json('smartnews.claus235.dev', '/smartnews.json')
+        print_msg('Loading news: {}'.format(str(json)))
 
         if json:
             news_qtd = 0
-            for item in json['itens']:
+            for news in json['itens']:
                 try:
                     SmartnewsListWidget = QtWidgets.QWidget()
                     ui = Ui_SmartNewsWidget()
-                    ui.setupUi(SmartnewsListWidget, item)
+                    ui.setupUi(SmartnewsListWidget)
+                    ui.update_proposal_details(news)
                     self.verticalLayout_6.addWidget(SmartnewsListWidget)
                     news_qtd += 1
                     if news_qtd == 5:
