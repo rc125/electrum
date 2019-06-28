@@ -19,6 +19,8 @@ env/
 .buildozer/
 bin/
 /app.fil
+contrib/build-wine/tmp
+
 
 # tox files
 .cache/
