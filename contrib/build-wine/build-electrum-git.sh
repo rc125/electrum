@@ -32,7 +32,7 @@ for repo in electrum-smart; do
 	    cd ..
     else
 	    URL=https://github.com/smartcash/$repo.git
-	    git clone -b master $URL $repo
+	    git clone -b $BUILD_BRANCH $URL $repo
     fi
 done
 

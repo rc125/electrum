@@ -12,6 +12,7 @@ test -n "$here" -a -d "$here" || exit
 echo "Clearing $here/build and $here/dist..."
 rm "$here"/build/* -rf
 rm "$here"/dist/* -rf
+rm "$here"/tmp/* -rf
 
 mkdir -p /tmp/electrum-smart-build
 mkdir -p /tmp/electrum-smart-build/pip-cache
