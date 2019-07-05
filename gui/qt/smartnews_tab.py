@@ -1,5 +1,6 @@
 import os
 import traceback
+import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .smartnews_list import Ui_SmartNewsWidget
@@ -83,12 +84,12 @@ class SmartnewsTab(QtWidgets.QWidget):
 
     def on_load_news_successful(self):
 
-        json = self.get_json('smartnews.claus235.dev', '/smartnews.json')
-        print_msg('Loading news: {}'.format(str(json)))
+        news_json = self.get_json('smartnews.claus235.dev', '/smartnews.json')
+        print_msg('Loading news: {}'.format(json.dumps(news_json)))
 
-        if json:
+        if news_json:
             news_qtd = 0
-            for news in json['itens']:
+            for news in news_json['itens']:
                 try:
                     SmartnewsListWidget = QtWidgets.QWidget()
                     ui = Ui_SmartNewsWidget()
