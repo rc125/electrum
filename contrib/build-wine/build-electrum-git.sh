@@ -19,8 +19,8 @@ set -e
 mkdir -p tmp
 cd tmp
 
-#BUILD_BRANCH="master"
-BUILD_BRANCH="4.0.x"
+BUILD_BRANCH="master"
+#BUILD_BRANCH="4.0.x"
 
 
 for repo in electrum-smart; do
