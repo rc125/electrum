@@ -208,6 +208,7 @@ class Abstract_Wallet(PrintError):
         self.multiple_change       = storage.get('multiple_change', False)
         self.labels                = storage.get('labels', {})
         self.frozen_addresses      = set(storage.get('frozen_addresses',[]))
+        self.frozen_coins          = set(storage.get('frozen_coins', []))
         self.history               = storage.get('addr_history',{})        # address -> list(txid, height)
         self.fiat_value            = storage.get('fiat_value', {})
 
@@ -661,6 +662,8 @@ class Abstract_Wallet(PrintError):
         coins, spent = self.get_addr_io(address)
         for txi in spent:
             coins.pop(txi)
+            if txi in self.frozen_coins:
+                self.frozen_coins.remove(txi)
         out = {}
         for txo, v in coins.items():
             tx_height, value, is_cb = v
@@ -671,7 +674,8 @@ class Abstract_Wallet(PrintError):
                 'prevout_n':int(prevout_n),
                 'prevout_hash':prevout_hash,
                 'height':tx_height,
-                'coinbase':is_cb
+                'coinbase':is_cb,
+                'is_frozen_coin': txo in self.frozen_coins
             }
             out[txo] = x
         return out
@@ -682,11 +686,13 @@ class Abstract_Wallet(PrintError):
         return sum([v for height, v, is_cb in received.values()])
 
     # return the balance of a bitcoin address: confirmed and matured, unconfirmed, unmatured
-    def get_addr_balance(self, address):
+    def get_addr_balance(self, address, exclude_frozen_coins = False):
         received, sent = self.get_addr_io(address)
         c = u = x = 0
         local_height = self.get_local_height()
         for txo, (tx_height, v, is_cb) in received.items():
+            if exclude_frozen_coins and txo in self.frozen_coins:
+                continue
             if is_cb and tx_height + COINBASE_MATURITY > local_height:
                 x += v
             elif tx_height > 0:
@@ -713,6 +719,8 @@ class Abstract_Wallet(PrintError):
         for addr in domain:
             utxos = self.get_addr_utxo(addr)
             for x in utxos.values():
+                if exclude_frozen and x['is_frozen_coin']:
+                    continue
                 if confirmed_only and x['height'] <= 0:
                     continue
                 if mature and x['coinbase'] and x['height'] + COINBASE_MATURITY > self.get_local_height():
@@ -731,14 +739,22 @@ class Abstract_Wallet(PrintError):
         return out
 
     def get_frozen_balance(self):
-        return self.get_balance(self.frozen_addresses)
+        if not self.frozen_coins:
+            # performance short-cut -- get the balance of the frozen address set only IFF we don't have any frozen coins
+            return self.get_balance(self.frozen_addresses)
+        # otherwise, do this more costly calculation...
+        cc_no_f, uu_no_f, xx_no_f = self.get_balance(None, exclude_frozen_coins = True, exclude_frozen_addresses = True)
+        cc_all, uu_all, xx_all = self.get_balance(None, exclude_frozen_coins = False, exclude_frozen_addresses = False)
+        return (cc_all-cc_no_f), (uu_all-uu_no_f), (xx_all-xx_no_f)
 
-    def get_balance(self, domain=None):
+    def get_balance(self, domain=None, exclude_frozen_coins=False, exclude_frozen_addresses=False):
         if domain is None:
             domain = self.get_addresses()
+        if exclude_frozen_addresses:
+            domain = set(domain) - self.frozen_addresses
         cc = uu = xx = 0
         for addr in domain:
-            c, u, x = self.get_addr_balance(addr)
+            c, u, x = self.get_addr_balance(addr, exclude_frozen_coins)
             cc += c
             uu += u
             xx += x
@@ -1087,7 +1103,7 @@ class Abstract_Wallet(PrintError):
             else:
                 income += value
             # fiat computations
-            if fx and fx.is_enabled():
+            if fx and fx.is_enabled() and fx.get_history_config():
                 date = timestamp_to_datetime(timestamp)
                 fiat_value = self.get_fiat_value(tx_hash, fx.ccy)
                 fiat_default = fiat_value is None
@@ -1124,7 +1140,7 @@ class Abstract_Wallet(PrintError):
                 'income': Satoshis(income),
                 'expenditures': Satoshis(expenditures)
             }
-            if fx and fx.is_enabled():
+            if fx and fx.is_enabled() and fx.get_history_config():
                 unrealized = self.unrealized_gains(domain, fx.timestamp_rate, fx.ccy)
                 summary['capital_gains'] = Fiat(capital_gains, fx.ccy)
                 summary['fiat_income'] = Fiat(fiat_income, fx.ccy)
@@ -1310,6 +1326,16 @@ class Abstract_Wallet(PrintError):
     def is_frozen(self, addr):
         return addr in self.frozen_addresses
 
+    def is_frozen_coin(self, utxo):
+        assert isinstance(utxo, (str, dict))
+        if isinstance(utxo, dict):
+            ret = ("{}:{}".format(utxo['prevout_hash'], utxo['prevout_n'])) in self.frozen_coins
+            if ret != utxo['is_frozen_coin']:
+                self.print_error("*** WARNING: utxo has stale is_frozen_coin flag")
+                utxo['is_frozen_coin'] = ret  # update stale flag
+            return ret
+        return utxo in self.frozen_coins
+
     def set_frozen_state(self, addrs, freeze):
         '''Set frozen state of the addresses to FREEZE, True or False'''
         if all(self.is_mine(addr) for addr in addrs):
@@ -1320,6 +1346,27 @@ class Abstract_Wallet(PrintError):
             self.storage.put('frozen_addresses', list(self.frozen_addresses))
             return True
         return False
+
+    def set_frozen_coin_state(self, utxos, freeze):
+        ok = 0
+        for utxo in utxos:
+            if isinstance(utxo, str):
+                if freeze:
+                    self.frozen_coins |= {utxo}
+                else:
+                    self.frozen_coins -= {utxo}
+                ok += 1
+            elif isinstance(utxo, dict) and self.is_mine(utxo['address']):
+                txo = "{}:{}".format(utxo['prevout_hash'], utxo['prevout_n'])
+                if freeze:
+                    self.frozen_coins |= {txo}
+                else:
+                    self.frozen_coins -= {txo}
+                utxo['is_frozen_coin'] = bool(freeze)
+                ok += 1
+        if ok:
+            self.storage.put('frozen_coins', list(self.frozen_coins))
+        return ok
 
     def prepare_for_verifier(self):
         # review transactions that are in the history

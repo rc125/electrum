@@ -19,15 +19,32 @@ set -e
 mkdir -p tmp
 cd tmp
 
-for repo in electrum-smart electrum-smart-locale electrum-smart-icons; do
+BUILD_BRANCH="master"
+#BUILD_BRANCH="4.0.x"
+
+
+for repo in electrum-smart; do
     if [ -d $repo ]; then
-	cd $repo
-	git pull
-	git checkout master
-	cd ..
+	    cd $repo
+        git fetch
+        git checkout $BUILD_BRANCH
+        git pull
+	    cd ..
     else
-	URL=https://github.com/smartcash/$repo.git
-	git clone -b master $URL $repo
+	    URL=https://github.com/smartcash/$repo.git
+	    git clone -b $BUILD_BRANCH $URL $repo
+    fi
+done
+
+for repo in electrum-smart-locale electrum-smart-icons; do
+    if [ -d $repo ]; then
+	    cd $repo
+        git pull
+        git checkout master
+	    cd ..
+    else
+        URL=https://github.com/smartcash/$repo.git
+        git clone -b master $URL $repo
     fi
 done
 

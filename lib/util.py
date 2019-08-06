@@ -507,7 +507,7 @@ def time_difference(distance_in_time, include_seconds):
 mainnet_block_explorers = {
     'Explorer': ('https://explorer.smartcash.cc/',
                         {'tx': 'tx/', 'addr': 'address/'}),
-    'Insight Explorer': ('https://insight.smartcash.cc/',
+    'Insight': ('https://insight.smartcash.cc/',
                  {'tx': 'tx/', 'addr': 'address/'}),
 }
 
@@ -525,7 +525,7 @@ def block_explorer_info():
     return testnet_block_explorers if constants.net.TESTNET else mainnet_block_explorers
 
 def block_explorer(config):
-    return config.get('block_explorer', 'SmartExplorer')
+    return config.get('block_explorer', 'Insight')
 
 def block_explorer_tuple(config):
     return block_explorer_info().get(block_explorer(config))

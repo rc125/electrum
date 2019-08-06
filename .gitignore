@@ -19,7 +19,12 @@ env/
 .buildozer/
 bin/
 /app.fil
+contrib/build-wine/tmp
+
 
 # tox files
 .cache/
 .coverage
+.DS_Store
+Electrum_SMART.egg-info/
+*.dylib

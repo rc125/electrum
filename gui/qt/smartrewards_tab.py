@@ -280,7 +280,10 @@ class SmartrewardsTab(QWidget):
 
         if progress < 0:
             self.manager.send_subscriptions()
-            return str(0)
+            #https://github.com/SmartCash/Core-Smart/blob/77aacf855de4b830564afed8be6183f575e0ae75/src/smartrewards/rewardspayments.h
+            nRewardPayoutStartDelay = 200;
+            return 'Snapshot has occurred. Payouts will begin at block {}'.format(end + nRewardPayoutStartDelay)
+
         else:
 
             time_to_end_in_seconds = progress * BLOCK_TIME

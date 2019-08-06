@@ -135,17 +135,20 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.addresses_tab = self.create_addresses_tab()
         self.smartnode_tab = self.create_smartnode_tab()
         self.smartvote_tab = self.create_smartvote_tab()
+        self.smartnews_tab = self.create_smartnews_tab()
         self.smartrewards_tab = self.create_smartrewards_tab()
         self.utxo_tab = self.create_utxo_tab()
         self.console_tab = self.create_console_tab()
         self.contacts_tab = self.create_contacts_tab()
 
+        tabs.addTab(self.smartnews_tab, QIcon(":icons/tab_smartnews.png"), _('News'))
         tabs.addTab(self.create_history_tab(), QIcon(":icons/tab_history.png"), _('History'))
         tabs.addTab(self.send_tab, QIcon(":icons/tab_send.png"), _('Send'))
         tabs.addTab(self.receive_tab, QIcon(":icons/tab_receive.png"), _('Receive'))
         tabs.addTab(self.smartnode_tab, QIcon(":icons/tab_smartnodes.png"), _('SmartNodes'))
         tabs.addTab(self.smartvote_tab, QIcon(":icons/tab_smarthive.png"), _('SmartVote'))
         tabs.addTab(self.smartrewards_tab, QIcon(":icons/tab_smartrewards.png"), _('SmartRewards'))
+
 
         def add_optional_tab(tabs, tab, icon, description, name):
             tab.tab_icon = icon
@@ -163,7 +166,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setCentralWidget(tabs)
 
-        tabs.currentChanged.connect(self.load_vote_proposals)
+        tabs.currentChanged.connect(self.load_data_by_tab_index)
 
         if self.config.get("is_maximized"):
             self.showMaximized()
@@ -175,6 +178,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         QShortcut(QKeySequence("Ctrl+W"), self, self.close)
         QShortcut(QKeySequence("Ctrl+Q"), self, self.close)
         QShortcut(QKeySequence("Ctrl+R"), self, self.update_wallet)
+        QShortcut(QKeySequence("F5"), self, self.update_wallet)
         QShortcut(QKeySequence("Ctrl+PgUp"), self, lambda: wrtabs.setCurrentIndex((wrtabs.currentIndex() - 1)%wrtabs.count()))
         QShortcut(QKeySequence("Ctrl+PgDown"), self, lambda: wrtabs.setCurrentIndex((wrtabs.currentIndex() + 1)%wrtabs.count()))
 
@@ -209,10 +213,10 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.connect_slots(gui_object.timer)
         self.fetch_alias()
 
-    def load_vote_proposals(self, index):
-        if(index == 4):
+    def load_data_by_tab_index(self, index):
+        if(index == 5):
             self.update_smartvote_tab()
-        elif (index == 5):
+        elif (index == 6):
             self.smartrewards_tab.subscribe_to_smartrewards()
             self.need_update.set()
 
@@ -588,7 +592,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
 
     def show_about(self):
         QMessageBox.about(self, "Electrum-SMART",
-            _("Version")+" %s" % (self.wallet.electrum_version) + " (Final) \n\n" +
+            _("Version")+" %s" % (self.wallet.electrum_version) + " \n\n" +
                 _("Electrum's focus is speed, with low resource usage and simplifying SmartCash. You do not need to perform regular backups, because your wallet can be recovered from a secret phrase that you can memorize or write on paper. Startup times are instant because it operates in conjunction with high-performance servers that handle the most complicated parts of the SmartCash system."  + "\n\n" +
                 _("Uses icons from the Icons8 icon pack (icons8.com).")))
 
@@ -1209,7 +1213,8 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         # SmartCash Fee
         #hbox.addWidget(self.feerate_e)
         #hbox.addWidget(self.size_e)
-        self.fee_e.setFrozen(True)
+        self.fee_e.setFrozen(False)
+        self.fee_e.setDisabled(True)
 
         hbox.addWidget(self.fee_e)
         hbox.addWidget(self.feerounding_icon, Qt.AlignLeft)
@@ -1829,6 +1834,11 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
     def set_frozen_state(self, addrs, freeze):
         self.wallet.set_frozen_state(addrs, freeze)
         self.address_list.update()
+        self.utxo_list.update()
+        self.update_fee()
+
+    def set_frozen_coin_state(self, utxos, freeze):
+        self.wallet.set_frozen_coin_state(utxos, freeze)
         self.utxo_list.update()
         self.update_fee()
 
@@ -3300,3 +3310,8 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
     def load_smartvote_info(self):
         self.smartvote_manager = SmartvoteManager(self.wallet)
         self.smartvote_tab.load_smartvote(self.smartvote_manager)
+
+    def create_smartnews_tab(self):
+        from .smartnews_tab import SmartnewsTab
+        self.smartnews_tab = smartnews = SmartnewsTab(self)
+        return smartnews
