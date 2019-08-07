@@ -35,10 +35,15 @@ Electrum, instead of using the 'packages' directory.
 The 'full' extra contains some optional dependencies that we think
 are often useful but they are not strictly needed.
 
+If you are using Trezor, you should follow these steps::
+
+    sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
+    sudo pip3 install setuptools
+    sudo pip3 install trezor
+    
 If you cloned the git repository, you need to compile extra files
 before you can run Electrum. Read the next section, "Development
 Version".
-
 
 
 Development version
