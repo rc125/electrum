@@ -84,7 +84,7 @@ class SmartnewsTab(QtWidgets.QWidget):
 
     def on_load_news_successful(self):
 
-        news_json = self.get_json('smartnews.claus235.dev', '/smartnews.json')
+        news_json = self.get_json('electrum-news.smartcash.cc', '/smartnews.json')
         print_msg('Loading news: {}'.format(json.dumps(news_json)))
 
         if news_json:
