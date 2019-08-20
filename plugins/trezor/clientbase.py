@@ -2,9 +2,16 @@ import time
 from struct import pack
 
 from electrum_smart.i18n import _
-from electrum_smart.util import PrintError, UserCancelled
+from electrum_smart.util import PrintError, UserCancelled, print_error
 from electrum_smart.keystore import bip39_normalize_passphrase
 from electrum_smart.bitcoin import serialize_xpub
+from ..hw_wallet.plugin import OutdatedHwFirmwareException
+
+from trezorlib.client import TrezorClient
+from trezorlib.exceptions import TrezorFailure, Cancelled, OutdatedFirmwareError
+from trezorlib.messages import WordRequestType, FailureType, RecoveryDeviceType
+import trezorlib.btc
+import trezorlib.device
 
 MESSAGES = {
     3: _("Confirm the transaction output on your {} device"),
