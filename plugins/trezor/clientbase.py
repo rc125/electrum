@@ -26,17 +26,57 @@ MESSAGES = {
 }
 
 class TrezorClientBase():
-
-    def __init__(self, handler, plugin, proto):
-        assert hasattr(self, 'tx_api')  # ProtocolMixin already constructed?
-        self.proto = proto
+    def __init__(self, transport, handler, plugin):
+        if plugin.is_outdated_fw_ignored():
+            TrezorClient.is_outdated = lambda *args, **kwargs: False
+        self.client = TrezorClient(transport, ui=self)
+        self.plugin = plugin
         self.device = plugin.device
         self.handler = handler
-        self.tx_api = plugin
-        self.types = plugin.types
+
         self.msg = None
         self.creating_wallet = False
+
+        self.in_flow = False
+
         self.used()
+
+    def run_flow(self, message=None, creating_wallet=False):
+        if self.in_flow:
+            raise RuntimeError("Overlapping call to run_flow")
+
+        self.in_flow = True
+        self.msg = message
+        self.creating_wallet = creating_wallet
+        self.prevent_timeouts()
+        return self
+
+    def end_flow(self):
+        self.in_flow = False
+        self.msg = None
+        self.creating_wallet = False
+        self.handler.finished()
+        self.used()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, e, traceback):
+        self.end_flow()
+        if e is not None:
+            if isinstance(e, Cancelled):
+                raise UserCancelled from e
+            elif isinstance(e, TrezorFailure):
+                raise RuntimeError(str(e)) from e
+            elif isinstance(e, OutdatedFirmwareError):
+                raise OutdatedHwFirmwareException(e) from e
+            else:
+                return False
+        return True
+
+    @property
+    def features(self):
+        return self.client.features
 
     def __str__(self):
         return "%s/%s" % (self.label(), self.features.device_id)
@@ -53,8 +93,11 @@ class TrezorClientBase():
         return not self.features.bootloader_mode
 
     def has_usable_connection_with_device(self):
+        if self.in_flow:
+            return True
+
         try:
-            res = self.ping("electrum pinging device")
+            res = self.client.ping("electrum pinging device")
             assert res == "electrum pinging device"
         except BaseException:
             return False
@@ -69,8 +112,11 @@ class TrezorClientBase():
     def timeout(self, cutoff):
         '''Time out the client if the last operation was before cutoff.'''
         if self.last_operation < cutoff:
-            self.print_error("timed out")
+            print_error("timed out")
             self.clear_session()
+
+    def i4b(self, x):
+        return pack('>I', x)
 
     @staticmethod
     def expand_path(n):
@@ -90,94 +136,175 @@ class TrezorClientBase():
             path.append(abs(int(x)) | prime)
         return path
 
-    def cancel(self):
-        '''Provided here as in keepkeylib but not trezorlib.'''
-        self.transport.write(self.proto.Cancel())
-
-    def i4b(self, x):
-        return pack('>I', x)
-
-    def get_xpub(self, bip32_path, xtype):
+    def get_xpub(self, bip32_path, xtype, creating=False):
         address_n = self.expand_path(bip32_path)
-        creating = False
-        node = self.get_public_node(address_n, creating).node
-        return serialize_xpub(xtype, node.chain_code, node.public_key, node.depth, self.i4b(node.fingerprint), self.i4b(node.child_num))
+        with self.run_flow(creating_wallet=creating):
+            node = trezorlib.btc.get_public_node(self.client, address_n).node
+        return serialize_xpub(xtype, node.chain_code, node.public_key, node.depth, self.i4b(node.fingerprint),
+                              self.i4b(node.child_num))
 
     def toggle_passphrase(self):
         if self.features.passphrase_protection:
-            self.msg = _("Confirm on your {} device to disable passphrases")
+            msg = _("Confirm on your {} device to disable passphrases")
         else:
-            self.msg = _("Confirm on your {} device to enable passphrases")
+            msg = _("Confirm on your {} device to enable passphrases")
         enabled = not self.features.passphrase_protection
-        self.apply_settings(use_passphrase=enabled)
+        with self.run_flow(msg):
+            trezorlib.device.apply_settings(self.client, use_passphrase=enabled)
 
     def change_label(self, label):
-        self.msg = _("Confirm the new label on your {} device")
-        self.apply_settings(label=label)
+        with self.run_flow(_("Confirm the new label on your {} device")):
+            trezorlib.device.apply_settings(self.client, label=label)
 
     def change_homescreen(self, homescreen):
-        self.msg = _("Confirm on your {} device to change your home screen")
-        self.apply_settings(homescreen=homescreen)
+        with self.run_flow(_("Confirm on your {} device to change your home screen")):
+            trezorlib.device.apply_settings(self.client, homescreen=homescreen)
 
     def set_pin(self, remove):
         if remove:
-            self.msg = _("Confirm on your {} device to disable PIN protection")
+            msg = _("Confirm on your {} device to disable PIN protection")
         elif self.features.pin_protection:
-            self.msg = _("Confirm on your {} device to change your PIN")
+            msg = _("Confirm on your {} device to change your PIN")
         else:
-            self.msg = _("Confirm on your {} device to set a PIN")
-        self.change_pin(remove)
+            msg = _("Confirm on your {} device to set a PIN")
+        with self.run_flow(msg):
+            trezorlib.device.change_pin(self.client, remove)
 
     def clear_session(self):
         '''Clear the session to force pin (and passphrase if enabled)
         re-entry.  Does not leak exceptions.'''
-        self.print_error("clear session:", self)
+        print_error(f"clear session: {self}")
         self.prevent_timeouts()
         try:
-            super(TrezorClientBase, self).clear_session()
+            self.client.clear_session()
         except BaseException as e:
             # If the device was removed it has the same effect...
-            self.print_error("clear_session: ignoring error", str(e))
-
-    def get_public_node(self, address_n, creating):
-        self.creating_wallet = creating
-        return super(TrezorClientBase, self).get_public_node(address_n)
+            print_error(f"clear_session: ignoring error {e}")
 
     def close(self):
         '''Called when Our wallet was closed or the device removed.'''
-        self.print_error("closing client")
+        print_error("closing client")
         self.clear_session()
-        # Release the device
-        self.transport.close()
 
-    def firmware_version(self):
-        f = self.features
-        return (f.major_version, f.minor_version, f.patch_version)
+    def is_uptodate(self):
+        if self.client.is_outdated():
+            return False
+        return self.client.version >= self.plugin.minimum_firmware
 
-    def atleast_version(self, major, minor=0, patch=0):
-        return self.firmware_version() >= (major, minor, patch)
+    def get_trezor_model(self):
+        """Returns '1' for Trezor One, 'T' for Trezor T."""
+        return self.features.model
 
-    @staticmethod
-    def wrapper(func):
-        '''Wrap methods to clear any message box they opened.'''
+    def show_address(self, address_str, script_type, multisig=None):
+        coin_name = self.plugin.get_coin_name()
+        #address_n = parse_path(address_str)
+        address_n = self.expand_path(address_str)
+        with self.run_flow():
+            return trezorlib.btc.get_address(
+                self.client,
+                coin_name,
+                address_n,
+                show_display=True,
+                script_type=script_type,
+                multisig=multisig)
 
-        def wrapped(self, *args, **kwargs):
-            try:
-                self.prevent_timeouts()
-                return func(self, *args, **kwargs)
-            finally:
-                self.used()
-                self.handler.finished()
-                self.creating_wallet = False
-                self.msg = None
+    def sign_message(self, address_str, message):
+        coin_name = self.plugin.get_coin_name()
+        #address_n = parse_path(address_str)
+        address_n = self.expand_path(address_str)
+        with self.run_flow():
+            return trezorlib.btc.sign_message(
+                self.client,
+                coin_name,
+                address_n,
+                message)
 
-        return wrapped
+    def recover_device(self, recovery_type, *args, **kwargs):
+        input_callback = self.mnemonic_callback(recovery_type)
+        with self.run_flow():
+            return trezorlib.device.recover(
+                self.client,
+                *args,
+                input_callback=input_callback,
+                type=recovery_type,
+                **kwargs)
 
-    @staticmethod
-    def wrap_methods(cls):
-        for method in ['apply_settings', 'change_pin',
-                       'get_address', 'get_public_node',
-                       'load_device_by_mnemonic', 'load_device_by_xprv',
-                       'recovery_device', 'reset_device', 'sign_message',
-                       'sign_tx', 'wipe_device']:
-            setattr(cls, method, cls.wrapper(getattr(cls, method)))
+    # ========= Unmodified trezorlib methods =========
+
+    def sign_tx(self, *args, **kwargs):
+        with self.run_flow():
+            return trezorlib.btc.sign_tx(self.client, *args, **kwargs)
+
+    def reset_device(self, *args, **kwargs):
+        with self.run_flow():
+            return trezorlib.device.reset(self.client, *args, **kwargs)
+
+    def wipe_device(self, *args, **kwargs):
+        with self.run_flow():
+            return trezorlib.device.wipe(self.client, *args, **kwargs)
+
+    # ========= UI methods ==========
+
+    def button_request(self, code):
+        message = self.msg or MESSAGES.get(code) or MESSAGES['default']
+        self.handler.show_message(message.format(self.device), self.client.cancel)
+
+    def get_pin(self, code=None):
+        if code == 2:
+            msg = _("Enter a new PIN for your {}:")
+        elif code == 3:
+            msg = (_("Re-enter the new PIN for your {}.\n\n"
+                     "NOTE: the positions of the numbers have changed!"))
+        else:
+            msg = _("Enter your current {} PIN:")
+        pin = self.handler.get_pin(msg.format(self.device))
+        if not pin:
+            raise Cancelled
+        if len(pin) > 9:
+            self.handler.show_error(_('The PIN cannot be longer than 9 characters.'))
+            raise Cancelled
+        return pin
+
+    def get_passphrase(self):
+        if self.creating_wallet:
+            msg = _("Enter a passphrase to generate this wallet.  Each time "
+                    "you use this wallet your {} will prompt you for the "
+                    "passphrase.  If you forget the passphrase you cannot "
+                    "access the bitcoins in the wallet.").format(self.device)
+        else:
+            msg = _("Enter the passphrase to unlock this wallet:")
+        passphrase = self.handler.get_passphrase(msg, self.creating_wallet)
+        if passphrase is None:
+            raise Cancelled
+        passphrase = bip39_normalize_passphrase(passphrase)
+        length = len(passphrase)
+        if length > 50:
+            self.handler.show_error(_("Too long passphrase ({} > 50 chars).").format(length))
+            raise Cancelled
+        return passphrase
+
+    def _matrix_char(self, matrix_type):
+        num = 9 if matrix_type == WordRequestType.Matrix9 else 6
+        char = self.handler.get_matrix(num)
+        if char == 'x':
+            raise Cancelled
+        return char
+
+    def mnemonic_callback(self, recovery_type):
+        if recovery_type is None:
+            return None
+
+        if recovery_type == RecoveryDeviceType.Matrix:
+            return self._matrix_char
+
+        step = 0
+        def word_callback(_ignored):
+            nonlocal step
+            step += 1
+            msg = _("Step {}/24.  Enter seed word as explained on your {}:").format(step, self.device)
+            word = self.handler.get_word(msg)
+            if not word:
+                raise Cancelled
+            return word
+        return word_callback
+
