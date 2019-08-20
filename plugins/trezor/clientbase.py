@@ -6,21 +6,20 @@ from electrum_smart.util import PrintError, UserCancelled
 from electrum_smart.keystore import bip39_normalize_passphrase
 from electrum_smart.bitcoin import serialize_xpub
 
+MESSAGES = {
+    3: _("Confirm the transaction output on your {} device"),
+    4: _("Confirm internal entropy on your {} device to begin"),
+    5: _("Write down the seed word shown on your {}"),
+    6: _("Confirm on your {} that you want to wipe it clean"),
+    7: _("Confirm on your {} device the message to sign"),
+    8: _("Confirm the total amount spent and the transaction fee on your {} device"),
+    10: _("Confirm wallet address on your {} device"),
+    14: _("Choose on your {} device where to enter your passphrase"),
+    'default': _("Check your {} device to continue"),
+}
 
 class GuiMixin(object):
     # Requires: self.proto, self.device
-
-    messages = {
-        3: _("Confirm the transaction output on your {} device"),
-        4: _("Confirm internal entropy on your {} device to begin"),
-        5: _("Write down the seed word shown on your {}"),
-        6: _("Confirm on your {} that you want to wipe it clean"),
-        7: _("Confirm on your {} device the message to sign"),
-        8: _("Confirm the total amount spent and the transaction fee on your "
-             "{} device"),
-        10: _("Confirm wallet address on your {} device"),
-        'default': _("Check your {} device to continue"),
-    }
 
     def callback_Failure(self, msg):
         # BaseClient's unfortunate call() implementation forces us to
