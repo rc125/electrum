@@ -308,3 +308,92 @@ class TrezorClientBase():
             return word
         return word_callback
 
+class GuiMixin(object):
+    # Requires: self.proto, self.device
+
+    messages = {
+        3: _("Confirm the transaction output on your {} device"),
+        4: _("Confirm internal entropy on your {} device to begin"),
+        5: _("Write down the seed word shown on your {}"),
+        6: _("Confirm on your {} that you want to wipe it clean"),
+        7: _("Confirm on your {} device the message to sign"),
+        8: _("Confirm the total amount spent and the transaction fee on your "
+             "{} device"),
+        10: _("Confirm wallet address on your {} device"),
+        'default': _("Check your {} device to continue"),
+    }
+
+    def callback_Failure(self, msg):
+        # BaseClient's unfortunate call() implementation forces us to
+        # raise exceptions on failure in order to unwind the stack.
+        # However, making the user acknowledge they cancelled
+        # gets old very quickly, so we suppress those.  The NotInitialized
+        # one is misnamed and indicates a passphrase request was cancelled.
+        if msg.code in (self.types.FailureType.PinCancelled,
+                        self.types.FailureType.ActionCancelled,
+                        self.types.FailureType.NotInitialized):
+            raise UserCancelled()
+        raise RuntimeError(msg.message)
+
+    def callback_ButtonRequest(self, msg):
+        message = self.msg
+        if not message:
+            message = self.messages.get(msg.code, self.messages['default'])
+        self.handler.show_message(message.format(self.device), self.cancel)
+        return self.proto.ButtonAck()
+
+    def callback_PinMatrixRequest(self, msg):
+        if msg.type == 2:
+            msg = _("Enter a new PIN for your {}:")
+        elif msg.type == 3:
+            msg = (_("Re-enter the new PIN for your {}.\n\n"
+                     "NOTE: the positions of the numbers have changed!"))
+        else:
+            msg = _("Enter your current {} PIN:")
+        pin = self.handler.get_pin(msg.format(self.device))
+        if len(pin) > 9:
+            self.handler.show_error(_('The PIN cannot be longer than 9 characters.'))
+            pin = ''  # to cancel below
+        if not pin:
+            return self.proto.Cancel()
+        return self.proto.PinMatrixAck(pin=pin)
+
+    def callback_PassphraseRequest(self, req):
+        if req and hasattr(req, 'on_device') and req.on_device is True:
+            return self.proto.PassphraseAck()
+
+        if self.creating_wallet:
+            msg = _("Enter a passphrase to generate this wallet.  Each time "
+                    "you use this wallet your {} will prompt you for the "
+                    "passphrase.  If you forget the passphrase you cannot "
+                    "access the SmartCash coins in the wallet.").format(self.device)
+        else:
+            msg = _("Enter the passphrase to unlock this wallet:")
+        passphrase = self.handler.get_passphrase(msg, self.creating_wallet)
+        if passphrase is None:
+            return self.proto.Cancel()
+        passphrase = bip39_normalize_passphrase(passphrase)
+
+        ack = self.proto.PassphraseAck(passphrase=passphrase)
+        length = len(ack.passphrase)
+        if length > 50:
+            self.handler.show_error(_("Too long passphrase ({} > 50 chars).").format(length))
+            return self.proto.Cancel()
+        return ack
+
+    def callback_PassphraseStateRequest(self, msg):
+        return self.proto.PassphraseStateAck()
+
+    def callback_WordRequest(self, msg):
+        self.step += 1
+        msg = _("Step {}/24.  Enter seed word as explained on "
+                "your {}:").format(self.step, self.device)
+        word = self.handler.get_word(msg)
+        # Unfortunately the device can't handle self.proto.Cancel()
+        return self.proto.WordAck(word=word)
+
+    def callback_CharacterRequest(self, msg):
+        char_info = self.handler.get_char(msg)
+        if not char_info:
+            return self.proto.Cancel()
+        return self.proto.CharacterAck(**char_info)
