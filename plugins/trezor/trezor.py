@@ -1,6 +1,7 @@
 from binascii import hexlify, unhexlify
+from typing import NamedTuple, Any
 
-from electrum_smart.util import bfh, bh2u, versiontuple
+from electrum_smart.util import bfh, bh2u, versiontuple, print_error
 from electrum_smart.bitcoin import (b58_address_to_hash160, xpub_from_pubkey,
                               TYPE_ADDRESS, TYPE_SCRIPT)
 from electrum_smart import constants
@@ -8,12 +9,38 @@ from electrum_smart.i18n import _
 from electrum_smart.plugins import BasePlugin, Device
 from electrum_smart.transaction import deserialize, Transaction
 from electrum_smart.keystore import Hardware_KeyStore, is_xpubkey, parse_xpubkey
+from electrum_smart.base_wizard import ScriptTypeNotSupported, HWD_SETUP_NEW_WALLET
 
 from ..hw_wallet import HW_PluginBase
+from ..hw_wallet.plugin import (is_any_tx_output_on_change_branch, trezor_validate_op_return_output_and_get_data,
+                                LibraryFoundButUnusable, OutdatedHwFirmwareException)
 
+try:
+    import trezorlib
+    import trezorlib.transport
+    from trezorlib.transport.bridge import BridgeTransport, call_bridge
+
+    from .clientbase import TrezorClientBase
+
+    from trezorlib.messages import (
+        RecoveryDeviceType, HDNodeType, HDNodePathType,
+        InputScriptType, OutputScriptType, MultisigRedeemScriptType,
+        TxInputType, TxOutputType, TxOutputBinType, TransactionType, SignTx)
+
+    RECOVERY_TYPE_SCRAMBLED_WORDS = RecoveryDeviceType.ScrambledWords
+    RECOVERY_TYPE_MATRIX = RecoveryDeviceType.Matrix
+
+    TREZORLIB = True
+except Exception as e:
+    print_error('error importing trezorlib')
+    TREZORLIB = False
+
+    RECOVERY_TYPE_SCRAMBLED_WORDS, RECOVERY_TYPE_MATRIX = range(2)
 
 # TREZOR initialization methods
-TIM_NEW, TIM_RECOVER, TIM_MNEMONIC, TIM_PRIVKEY = range(0, 4)
+TIM_NEW, TIM_RECOVER = range(2)
+
+TREZOR_PRODUCT_KEY = 'Trezor'
 
 # script "generation"
 SCRIPT_GEN_LEGACY, SCRIPT_GEN_P2SH_SEGWIT, SCRIPT_GEN_NATIVE_SEGWIT = range(0, 3)
