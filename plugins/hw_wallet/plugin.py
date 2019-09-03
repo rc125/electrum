@@ -146,9 +146,9 @@ def trezor_validate_op_return_output_and_get_data(output) -> bytes:
     script = bfh(output.address)
     if not (script[0] == opcodes.OP_RETURN and
             script[1] == len(script) - 2 and script[1] <= 75):
-        raise UserFacingException(_("Only OP_RETURN scripts, with one constant push, are supported."))
+        raise Exception(_("Only OP_RETURN scripts, with one constant push, are supported."))
     if output.value != 0:
-        raise UserFacingException(_("Amount for OP_RETURN output must be zero."))
+        raise Exception(_("Amount for OP_RETURN output must be zero."))
     return script[2:]
 
 def only_hook_if_libraries_available(func):
