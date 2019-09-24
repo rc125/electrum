@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME_ROOT=electrum-smart
-PYTHON_VERSION=3.5.4
+PYTHON_VERSION=3.6.8
 
 # These settings probably don't need any change
 export WINEPREFIX=/opt/wine64
