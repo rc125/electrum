@@ -57,8 +57,8 @@ class NetworkAddress(object):
 class MasternodePing(object):
     """A smartnode ping message."""
     @classmethod
-    def deserialize(cls, vds, protocol_version=90028):
-        if protocol_version <= 90028:
+    def deserialize(cls, vds, protocol_version=90030):
+        if protocol_version <= 90030:
             vin = parse_input(vds)
         else:
             vin = parse_outpoint(vds)
@@ -90,7 +90,7 @@ class MasternodePing(object):
         return cls(**kwargs)
 
     def __init__(self, vin=None, block_hash='', sig_time=0, sig='',
-                 protocol_version=90028):
+                 protocol_version=90030):
         if vin is None:
             vin = {'prevout_hash':'', 'prevout_n': 0, 'scriptSig': '', 'sequence':0xffffffff}
         else:
@@ -104,7 +104,7 @@ class MasternodePing(object):
     def serialize(self, vds=None):
         if not vds:
             vds = BCDataStream()
-        if self.protocol_version <= 90028:
+        if self.protocol_version <= 90030:
             serialize_input(vds, self.vin)
         else:
             serialize_outpoint(vds, self.vin)
@@ -184,7 +184,7 @@ class MasternodeAnnounce(object):
 
     Attributes:
         - alias: Alias to help the user identify this masternode.
-        - vin: 10K SMART input (outpoint: 10K SMART input for proto > 90028).
+        - vin: 10K SMART input (outpoint: 100K SMART input for proto > 90028).
         - addr: Address that the masternode can be reached at.
         - collateral_key: Key that can spend the 10K SMART input.
         - delegate_key: Key that the masternode will sign messages with.
@@ -197,7 +197,7 @@ class MasternodeAnnounce(object):
     """
     def __init__(self, alias='', vin=None, addr=NetworkAddress(),
                  collateral_key='', delegate_key='', sig='', sig_time=0,
-                 protocol_version=90028, last_ping=MasternodePing(),
+                 protocol_version=90030, last_ping=MasternodePing(),
                  announced=False):
         self.alias = alias
         if vin is None:
@@ -257,7 +257,7 @@ class MasternodeAnnounce(object):
             sig_time = vds.read_int64()
 
             protocol_version = vds.read_uint32()
-            if protocol_version in [90028]:
+            if protocol_version in [90030]:
                 return True
             else:
                 return False
