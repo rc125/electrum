@@ -253,11 +253,11 @@ class SmartrewardsTab(QWidget):
     def retranslateUi(self):
         _translate = QCoreApplication.translate
         self.setWindowTitle(_translate("SmartrewardsList", "Form"))
-        self.label_17.setText(_translate("SmartrewardsList", "SmartRewards round"))
+        self.label_17.setText(_translate("SmartrewardsList", "SmartRewards Round"))
         self.roundLabel.setText(_translate("SmartrewardsList", "0"))
         self.label_19.setText(_translate("SmartrewardsList", "Round ends"))
         self.nextRoundLabel.setText(_translate("SmartrewardsList", "25.12.1999"))
-        self.label_21.setText(_translate("SmartrewardsList", "Current reward"))
+        self.label_21.setText(_translate("SmartrewardsList", "SmartRewards Yearly Yield"))
         self.percentLabel.setText(_translate("SmartrewardsList", "0.00%"))
         self.label.setText(_translate("SmartrewardsList", "Estimated SmartRewards"))
         self.sumLabel.setText(_translate("SmartrewardsList", "0 SMART"))

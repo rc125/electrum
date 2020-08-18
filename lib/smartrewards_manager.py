@@ -27,7 +27,7 @@ class SmartRewardsInfo(object):
         self.disqualified_addresses = disqualified_addresses
         self.disqualified_smart = disqualified_smart
         self.estimated_rewards = estimated_rewards
-        self.estimated_percent = estimated_percent
+        self.estimated_percent = estimated_percent * .52
         self.actual_blockheight = 0
 
     def get_rewards_cycle(self):
@@ -70,7 +70,7 @@ class SmartrewardsManager(object):
             balance = sum(self.wallet.get_addr_balance(addr))
             label = self.wallet.labels.get(addr)
             if not label: label = '(no label)'
-            if balance >= 1000 * COIN:
+            if balance >= 999 * COIN:
                 self.rewards_addresses.append(SmartRewardsAddress(label, addr, balance, 0, 0))
 
     def reload(self):
@@ -125,7 +125,7 @@ class SmartrewardsManager(object):
         for reward in self.rewards_addresses:
             if addr == reward.address:
                 reward.eligible_amount = eligible_balance
-                reward.estimated_reward = float("{0:.8f}".format(eligible_balance * self.rewards_info.estimated_percent))
+                reward.estimated_reward = float("{0:.8f}".format(eligible_balance * self.rewards_info.estimated_percent / 52))
                 break
 
         print_msg('Rewards for [{}] is [{}]'.format(addr, eligible_balance))
