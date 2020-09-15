@@ -135,13 +135,13 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.addresses_tab = self.create_addresses_tab()
         self.smartnode_tab = self.create_smartnode_tab()
         self.smartvote_tab = self.create_smartvote_tab()
-        self.smartnews_tab = self.create_smartnews_tab()
+#        self.smartnews_tab = self.create_smartnews_tab()
         self.smartrewards_tab = self.create_smartrewards_tab()
         self.utxo_tab = self.create_utxo_tab()
         self.console_tab = self.create_console_tab()
         self.contacts_tab = self.create_contacts_tab()
 
-        tabs.addTab(self.smartnews_tab, QIcon(":icons/tab_smartnews.png"), _('News'))
+#        tabs.addTab(self.smartnews_tab, QIcon(":icons/tab_smartnews.png"), _('News'))
         tabs.addTab(self.create_history_tab(), QIcon(":icons/tab_history.png"), _('History'))
         tabs.addTab(self.send_tab, QIcon(":icons/tab_send.png"), _('Send'))
         tabs.addTab(self.receive_tab, QIcon(":icons/tab_receive.png"), _('Receive'))
@@ -3311,7 +3311,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.smartvote_manager = SmartvoteManager(self.wallet)
         self.smartvote_tab.load_smartvote(self.smartvote_manager)
 
-    def create_smartnews_tab(self):
-        from .smartnews_tab import SmartnewsTab
-        self.smartnews_tab = smartnews = SmartnewsTab(self)
-        return smartnews
+#    def create_smartnews_tab(self):
+#        from .smartnews_tab import SmartnewsTab
+#        self.smartnews_tab = smartnews = SmartnewsTab(self)
+#        return smartnews
