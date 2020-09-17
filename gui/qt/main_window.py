@@ -97,7 +97,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
 
         self.gui_object = gui_object
         self.smartnode_manager = None
-        self.smartvote_manager = None
+#        self.smartvote_manager = None
         self.smartrewards_manager = None
         self.config = config = gui_object.config
 
@@ -134,7 +134,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.receive_tab = self.create_receive_tab()
         self.addresses_tab = self.create_addresses_tab()
         self.smartnode_tab = self.create_smartnode_tab()
-        self.smartvote_tab = self.create_smartvote_tab()
+#        self.smartvote_tab = self.create_smartvote_tab()
 #        self.smartnews_tab = self.create_smartnews_tab()
         self.smartrewards_tab = self.create_smartrewards_tab()
         self.utxo_tab = self.create_utxo_tab()
@@ -146,7 +146,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         tabs.addTab(self.send_tab, QIcon(":icons/tab_send.png"), _('Send'))
         tabs.addTab(self.receive_tab, QIcon(":icons/tab_receive.png"), _('Receive'))
         tabs.addTab(self.smartnode_tab, QIcon(":icons/tab_smartnodes.png"), _('SmartNodes'))
-        tabs.addTab(self.smartvote_tab, QIcon(":icons/tab_smarthive.png"), _('SmartVote'))
+#        tabs.addTab(self.smartvote_tab, QIcon(":icons/tab_smarthive.png"), _('SmartVote'))
         tabs.addTab(self.smartrewards_tab, QIcon(":icons/tab_smartrewards.png"), _('SmartRewards'))
 
 
@@ -214,9 +214,10 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.fetch_alias()
 
     def load_data_by_tab_index(self, index):
-        if(index == 5):
-            self.update_smartvote_tab()
-        elif (index == 6):
+#        if(index == 5):
+#            self.update_smartvote_tab()
+#        elif (index == 6):
+        if (index == 6):
             self.smartrewards_tab.subscribe_to_smartrewards()
             self.need_update.set()
 
@@ -324,7 +325,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         elif event == 'verified':
             self.history_list.update_item(*args)
             self.smartrewards_tab.reload()
-            self.load_smartvote_info()
+#            self.load_smartvote_info()
         elif event == 'fee':
             if self.config.is_dynfee():
                 #self.fee_slider.update()
@@ -365,7 +366,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.smartnode_tab.update_nodelist(self.wallet, self.config, self.smartnode_manager)
 
         #Load SmartVote
-        self.load_smartvote_info()
+#        self.load_smartvote_info()
 
         # Load SmartRewards
         self.smartrewards_manager = SmartrewardsManager(self.wallet, self.network)
@@ -3299,17 +3300,17 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.smartrewards_tab = smartrewards = SmartrewardsTab(self)
         return smartrewards
 
-    def create_smartvote_tab(self):
-        from .smartvote_tab import SmartvoteTab
-        self.smartvote_tab = smartvote = SmartvoteTab(self)
-        return smartvote
+#    def create_smartvote_tab(self):
+#        from .smartvote_tab import SmartvoteTab
+#        self.smartvote_tab = smartvote = SmartvoteTab(self)
+#        return smartvote
 
-    def update_smartvote_tab(self):
-        self.smartvote_tab.update_all_proposals()
+#    def update_smartvote_tab(self):
+#        self.smartvote_tab.update_all_proposals()
 
-    def load_smartvote_info(self):
-        self.smartvote_manager = SmartvoteManager(self.wallet)
-        self.smartvote_tab.load_smartvote(self.smartvote_manager)
+#    def load_smartvote_info(self):
+#        self.smartvote_manager = SmartvoteManager(self.wallet)
+#        self.smartvote_tab.load_smartvote(self.smartvote_manager)
 
 #    def create_smartnews_tab(self):
 #        from .smartnews_tab import SmartnewsTab
